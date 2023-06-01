@@ -44,7 +44,7 @@ def image_specific_svm(dataset, segm_mask, coordinates):
     X = dataset
     # print(X.shape)
     Y = []
-    for coordinate in coordinates[:-20]:
+    for coordinate in coordinates:
         x,y,z = coordinate
         Y.append(segm_mask[x,y,z])
     Y=np.array(Y)
@@ -52,10 +52,10 @@ def image_specific_svm(dataset, segm_mask, coordinates):
     classifier = svm.LinearSVC(multi_class='ovr', random_state=1)
     classifier.fit(X,Y)
     W = classifier.coef_
-    
+    b = classifier.intercept_
     # print(W.shape)
     # print("Created W array")
-    return W
+    return np.concatenate([W.flatten(), b])
 
 
 import random
@@ -113,21 +113,35 @@ def svm_test(dataset, segm_mask, coordinates):
 
 
 coordinates= np.load("data/temp/general_coordinates.npy")
-roi = load_roi("9002430")
-segm_mask = fn_segm_mask_to_array("9002430")
-roi_coord = []
-for coordinate in coordinates:
-    x,y,z=coordinate
-    if roi[x,y,z] == 1:
-        roi_coord.append(coordinate)
-roi_coord = np.array(roi_coord)
-print(roi_coord.shape)
-array = fn_scan_to_array("data/MRI_MASKS/subjects/9002430")
-dataset = gather_local_descriptors(array, roi_coord)
-W, b = svm_test(dataset, segm_mask, roi_coord)
+dir1 = os.listdir("data/MRI_MASKS/subjects")
+dir2 = [(os.listdir("data/MRI_MASKS/segmentation_masks")[i]).split(".")[0] for i in range(len(os.listdir("data/MRI_MASKS/segmentation_masks")))]
+dir3 = [(os.listdir("data/MRI_MASKS/roi_masks_dataset")[i]).split(".")[0][4:] for i in range(len(os.listdir("data/MRI_MASKS/roi_masks_dataset")))]
+common_subjects = list(set(dir1).intersection(dir2).intersection(dir3))
+print(common_subjects)
+def get_w_space(common_subjects):
+    w_space=[]
+    for scan_no in common_subjects:
+        roi = load_roi(scan_no)
+        segm_mask = fn_segm_mask_to_array(scan_no)
+        roi_coord = []
+        for coordinate in coordinates:
+            x,y,z=coordinate
+            if roi[x,y,z] == 1:
+                roi_coord.append(coordinate)
+        roi_coord = np.array(roi_coord)
+        print("roi coord for" , scan_no, ":", roi_coord.shape)
+        array = fn_scan_to_array("data/MRI_MASKS/subjects/" + scan_no)
+        dataset = gather_local_descriptors(array, roi_coord)
+        print("gathered local descriptors dataaset")
+        # W, b = svm_test(dataset, segm_mask, roi_coord)
+        w_vector = image_specific_svm(dataset, segm_mask, roi_coord)
+        print("got w_vector")
+        w_space.append(w_vector)
+    w_space = np.array(w_space)
+    np.save("data/X_W_arrays/w_space",w_space)
+    print('saved w_space', w_space.shape)
 
-print(roi_coord.shape)
-
+get_w_space(common_subjects)
 # segm_mask = fn_segm_mask_to_array("9002430")
 # a = np.zeros(5)
 # for coordinate in coordinates:
@@ -171,6 +185,22 @@ np.save("data/X_W_arrays/W_space.npy", Weight_Space)
 
 '''
 
+coordinates= np.load("data/temp/general_coordinates.npy")
+def get_local_descriptors_perimeter(coordinates):
+    coordinates = np.random.choice(coordinates.shape[0], size=15000, replace=False)
+    descriptors= []
+    for scan_no in common_subjects:
+        roi = load_roi(scan_no)
+        for coordinate in coordinates:
+            x,y,z=coordinate
+            if roi[x,y,z] == 1:
+                descriptors.append(makeshiftSIFT(scan_no, coordinate))
+        print(scan_no, "done")
+    return np.array(descriptors)
+
+descriptors = get_local_descriptors_perimeter(coordinates)
+np.save("data/temp/descriptors_perimeter.npy", descriptors)
+
 
 
 
@@ -180,7 +210,8 @@ def find_codewords(local_descriptors, no_of_words):
     kmeans_model=KMeans(n_clusters=no_of_words, verbose=False, init='k-means++', random_state=random_state)
     kmeans_model.fit(local_descriptors)
     return kmeans_model.cluster_centers_
-
+codewords = find_codewords(descriptors, 25)
+np.save('data/temp/codewords', codewords)
 '''
 # Gather All Local Descriptors Dataset and find codewords
 coordinates_subset= np.load("data/temp/subeset_coord.npy")
@@ -212,13 +243,13 @@ def soft_assign_histogram(codewords, array_3d, coordinates, a):
     return histogram
 
 
-# codewords=np.load("data/temp/codewords.npy")
+codewords=np.load("data/temp/codewords.npy")
 
-# list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
-#                       np.load("data/temp/sub_2_coord.npy"),
-#                       np.load("data/temp/sub_3_coord.npy"),
-#                       np.load("data/temp/sub_4_coord.npy"),
-#                       np.load("data/temp/sub_5_coord.npy")]
+list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
+                      np.load("data/temp/sub_2_coord.npy"),
+                      np.load("data/temp/sub_3_coord.npy"),
+                      np.load("data/temp/sub_4_coord.npy"),
+                      np.load("data/temp/sub_5_coord.npy")]
 
 def create_global_descriptor(scan, subregion_list, codewords):
     global_descriptor=np.empty([1,len(subregion_list)*codewords.shape[0]])
@@ -232,11 +263,12 @@ def create_global_descriptor(scan, subregion_list, codewords):
     # print(global_descriptor)
     return global_descriptor.T
 
-'''
 dir1 = os.listdir("data/MRI_MASKS/subjects")
 dir2 = [(os.listdir("data/MRI_MASKS/segmentation_masks")[i]).split(".")[0] for i in range(len(os.listdir("data/MRI_MASKS/segmentation_masks")))]
-common_subjects = list(set(dir1).intersection(dir2))
-print(common_subjects)
+dir3 = [(os.listdir("data/MRI_MASKS/roi_masks_dataset")[i]).split(".")[0][4:] for i in range(len(os.listdir("data/MRI_MASKS/roi_masks_dataset")))]
+common_subjects = list(set(dir1).intersection(dir2).intersection(dir3))
+
+# print(common_subjects)
 all_global_descriptors = np.empty([len(list_of_subregions)*codewords.shape[0], len(common_subjects)])
 for i, subject in enumerate(common_subjects):
     path = "data/MRI_MASKS/subjects/" + subject
@@ -247,4 +279,3 @@ for i, subject in enumerate(common_subjects):
 
 
 np.save("data/X_W_arrays/X_space.npy", all_global_descriptors)
-'''

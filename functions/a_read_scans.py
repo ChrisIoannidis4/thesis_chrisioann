@@ -63,34 +63,42 @@ print('left exception join files loaded')
 # for file in files_only_in_directory:
 #     print(file)
 
-subject_name = files_only_in_directory[0]
-print('sj name: ', subject_name)
-mhd_path = "data/MRI_MASKS/segmentation_masks/"+ subject_name +".segmentation_masks.mhd"
-segm_mask = sitk.ReadImage(mhd_path, sitk.sitkFloat32)
-print('segm mask read')
-binary_mask = np.logical_or(segm_mask == 2, segm_mask == 4).astype(np.uint8)#.reshape(1,386,386,160)
-print('binary_mask shape:', binary_mask.shape)
-binary_mask_with_channel = np.expand_dims(binary_mask, axis=0)
-print('binary mask ok', binary_mask_with_channel.shape)
-binary_image = sitk.GetImageFromArray(binary_mask_with_channel)
-dilate_filter = sitk.BinaryDilateImageFilter()
-print('filter init')
-kr=1
-dilate_filter.SetKernelRadius(kr)  # Adjust the radius according to your requirements
-print('filter ok - kernel radius: ', kr)
-# Perform the dilation operation
-dilated_image = dilate_filter.Execute(binary_image)
+for subject_name in files_only_in_directory:
+    print('sj name: ', subject_name)
+    mhd_path = "data/MRI_MASKS/segmentation_masks/"+ subject_name +".segmentation_masks.mhd"
+    segm_mask = sitk.ReadImage(mhd_path, sitk.sitkFloat32)
+    print('segm mask read')
+    binary_mask = np.logical_or(segm_mask == 2, segm_mask == 4).astype(np.uint8)#.reshape(1,386,386,160)
+    print('binary_mask shape:', binary_mask.shape)
+    binary_mask_with_channel = np.expand_dims(binary_mask, axis=0)
+    print('binary mask ok', binary_mask_with_channel.shape)
+    binary_image = sitk.GetImageFromArray(binary_mask_with_channel)
+    dilate_filter = sitk.BinaryDilateImageFilter()
+    print('filter init')
+    kr=120
+    dilate_filter.SetKernelRadius(kr)  # Adjust the radius according to your requirements
+    print('filter ok - kernel radius: ', kr)
+    # Perform the dilation operation
+    dilated_image = dilate_filter.Execute(binary_image)
 
-# Convert the dilated image back to a numpy array
-dilated_mask = sitk.GetArrayFromImage(dilated_image)
-print('dilated mask ok', dilated_mask.shape)
-roi_mask = np.flip(dilated_mask, axis=0)  # (384, 384, 160)
-print('roi_mask ok - kernel radius: ', kr)
-
+    # Convert the dilated image back to a numpy array
+    dilated_mask = sitk.GetArrayFromImage(dilated_image)
+    dilated_mask1 = np.reshape(dilated_mask, [384, 384, 160])
+    print('dilated mask ok', dilated_mask1.shape)
+    roi_mask = np.flip(dilated_mask1, axis=0)  # (384, 384, 160)
+    print('roi_mask ok - kernel radius: ', kr)
+    np.save("data/MRI_MASKS/roi_masks_dataset/roi_"+ subject_name +".npy" , roi_mask)
+    print('~~~ DONE WITH', subject_name, '~~~')
 # roi_mask = np.load("data/MRI_MASKS/roi_masks_dataset/roi_9001104.npy")
 # subject_array = fn_scan_to_array("data/MRI_MASKS/subjects/9001104") # (384, 384, 160)
-# segm_mask = fn_segm_mask_to_array('9001104')                        # (384, 384, 160)
-# print(np.unique(segm_mask))
-plt.imshow(roi_mask[:, :, 50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
-plt.colorbar()
-plt.show()
+# segm_mask = fn_segm_mask_to_array(subject_name)                        # (384, 384, 160)
+# # print(np.unique(segm_mask))
+# plt.imshow(roi_mask[:, :, 50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
+# plt.colorbar()
+# plt.show()
+# plt.imshow(np.load('data/MRI_MASKS/roi_masks_dataset/roi_9001104.npy')[:,:,50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
+# plt.colorbar()
+# plt.show()
+# plt.imshow(segm_mask[:, :, 50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
+# plt.colorbar()
+# plt.show()

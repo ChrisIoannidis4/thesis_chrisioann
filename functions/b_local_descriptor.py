@@ -38,12 +38,12 @@ def makeshiftSIFT(array3d, coordinates):
 
     return descriptor
 
-coordinate = np.load("data/temp/sampled_coordinates.npy")[10^6]
+# coordinate = np.load("data/temp/sampled_coordinates.npy")[10^6]
 
-descriptor_sift = makeshiftSIFT(fn_scan_to_array('data/MRI_MASKS/subjects/9005132'),coordinate)
+# descriptor_sift = makeshiftSIFT(fn_scan_to_array('data/MRI_MASKS/subjects/9005132'),coordinate)
 
 
-print('sift:', descriptor_sift.shape, np.max(descriptor_sift), np.min(descriptor_sift))
+# print('sift:', descriptor_sift.shape, np.max(descriptor_sift), np.min(descriptor_sift))
 
 
 
@@ -247,9 +247,9 @@ def triplanar_hog(point, image, patch_size, n_bins, n_cells = 1, normalize = Tru
 
 
 
-descriptor_hog = hog_3d_proj(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'))
+# descriptor_hog = hog_3d_proj(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'))
 
-print('hog:', descriptor_hog.shape, np.max(descriptor_hog), np.min(descriptor_hog))
+# print('hog:', descriptor_hog.shape, np.max(descriptor_hog), np.min(descriptor_hog))
 
 
 
@@ -355,9 +355,9 @@ def lbp_ri_sh(point, img, patch_size, sph_degree, ico_radius, ico_level, n_bins 
     return D
 
 
-descriptor_lbp = lbp_ri_sh(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'), 5, 5, 3, 2, concatenate = False)
+# descriptor_lbp = lbp_ri_sh(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'), 5, 5, 3, 2, concatenate = False)
 
-print('lbp:', descriptor_lbp.shape, np.max(descriptor_lbp), np.min(descriptor_lbp))
+# print('lbp:', descriptor_lbp.shape, np.max(descriptor_lbp), np.min(descriptor_lbp))
 
 
 
@@ -367,9 +367,9 @@ def fn_hog_lbp_descriptor(coordinate, array):
     descriptor_lbp_hog = np.concatenate([descriptor_hog,descriptor_lbp])
     return descriptor_lbp_hog.reshape(1, len(descriptor_lbp_hog))
 
-descriptor_hog_lbp = fn_hog_lbp_descriptor(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'))
+# descriptor_hog_lbp = fn_hog_lbp_descriptor(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'))
 
-print('hog lbp:', descriptor_hog_lbp.shape, np.max(descriptor_hog_lbp), np.min(descriptor_hog_lbp))
+# print('hog lbp:', descriptor_hog_lbp.shape, np.max(descriptor_hog_lbp), np.min(descriptor_hog_lbp))
 
 # descriptor = makeshiftSIFT(fn_scan_to_array('data/MRI_MASKS/subjects/9005132'), coordinate)
 # print(descriptor.shape)

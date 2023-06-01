@@ -15,7 +15,7 @@ def transfer_weight_vector(xi, Dx, Dw, M): #, W_normalizer):
     return wi
 
 
-def svm_predict(local_descriptor, weights):
+def svm_predict(local_descriptor, weights, bias):
     scores = np.dot(local_descriptor, weights) + bias   # shape (5,)
     # return the class with the highest score
     return np.argmax(scores)

@@ -93,9 +93,9 @@ for x in range(20,320,5):
             # if x%5==0 and y%5==0 and z%3==0:
             coordinates.append([x,y,z])
 
-coordinates=np.array(coordinates)
-np.save('data/temp/general_coordinates.npy', coordinates)
-print(coordinates.shape)
+# coordinates=np.array(coordinates)
+# np.save('data/temp/general_coordinates.npy', coordinates)
+# print(coordinates.shape)
 #             coordinates.append([x,y,z])
 
 
