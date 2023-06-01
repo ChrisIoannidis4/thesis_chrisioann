@@ -26,12 +26,15 @@ sift = cv2.xfeatures2d.SIFT_create()
 # sample_SVM_coordinates(roi_mask, segm_mask)
 # coordinates= np.load("data/temp/sampled_coordinates.npy")
 
-def gather_local_descriptors(scan_array, list_of_coordinates):
+def gather_local_descriptors(scan_array, list_of_coordinates, roi):
     list_of_descriptors=[]
     specific_coordinates = []
     for coordinate in list_of_coordinates:
-        local_descriptor =  makeshiftSIFT(scan_array, coordinate) #fn_hog_lbp_descriptor(coordinate, scan_array)
-        list_of_descriptors.append(local_descriptor)
+        x,y,z = coordinate
+        if roi[x,y,z] == 1:
+            local_descriptor =  makeshiftSIFT(scan_array, coordinate) #fn_hog_lbp_descriptor(coordinate, scan_array)
+            list_of_descriptors.append(local_descriptor)
+        
     local_descriptors_dataset = np.array(list_of_descriptors).reshape(len(list_of_descriptors), local_descriptor.shape[1])
     # print("gathered local descriptors dataset.
     return local_descriptors_dataset 
@@ -141,7 +144,7 @@ def get_w_space(common_subjects):
     np.save("data/X_W_arrays/w_space",w_space)
     print('saved w_space', w_space.shape)
 
-get_w_space(common_subjects)
+# get_w_space(common_subjects)
 # segm_mask = fn_segm_mask_to_array("9002430")
 # a = np.zeros(5)
 # for coordinate in coordinates:
@@ -187,19 +190,22 @@ np.save("data/X_W_arrays/W_space.npy", Weight_Space)
 
 coordinates= np.load("data/temp/general_coordinates.npy")
 def get_local_descriptors_perimeter(coordinates):
-    coordinates = np.random.choice(coordinates.shape[0], size=15000, replace=False)
+    subset_indices = np.random.choice(coordinates.shape[0], size=10000, replace=False)
+    coord_subset = coordinates[subset_indices]
     descriptors= []
     for scan_no in common_subjects:
         roi = load_roi(scan_no)
+        scan = fn_scan_to_array("data/MRI_MASKS/subjects/"+scan_no)
         for coordinate in coordinates:
             x,y,z=coordinate
+            # print(coordinate)
             if roi[x,y,z] == 1:
-                descriptors.append(makeshiftSIFT(scan_no, coordinate))
+                descriptors.append(makeshiftSIFT(scan, coordinate))
         print(scan_no, "done")
     return np.array(descriptors)
 
-descriptors = get_local_descriptors_perimeter(coordinates)
-np.save("data/temp/descriptors_perimeter.npy", descriptors)
+# descriptors = get_local_descriptors_perimeter(coordinates)
+# np.save("data/temp/descriptors_perimeter.npy", descriptors)
 
 
 
@@ -224,9 +230,9 @@ np.save("data/temp/codewords.npy", codewords)
 '''
 
 # coordinates_per_subregion = ...
-def soft_assign_histogram(codewords, array_3d, coordinates, a):
+def soft_assign_histogram(codewords, array_3d, coordinates, roi, a):
 
-    subregion_descriptors = gather_local_descriptors(array_3d, coordinates)   #(2725, 128)
+    subregion_descriptors = gather_local_descriptors(array_3d, coordinates, roi)   #(2725, 128)
     # codewords (25, 128)
     histogram = np.zeros([1,codewords.shape[0]]) 
     for j, descriptor in enumerate(subregion_descriptors):
@@ -243,7 +249,7 @@ def soft_assign_histogram(codewords, array_3d, coordinates, a):
     return histogram
 
 
-codewords=np.load("data/temp/codewords.npy")
+# codewords=np.load("data/temp/codewords.npy")
 
 list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
                       np.load("data/temp/sub_2_coord.npy"),
@@ -251,10 +257,10 @@ list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
                       np.load("data/temp/sub_4_coord.npy"),
                       np.load("data/temp/sub_5_coord.npy")]
 
-def create_global_descriptor(scan, subregion_list, codewords):
+def create_global_descriptor(scan, subregion_list, codewords, roi):
     global_descriptor=np.empty([1,len(subregion_list)*codewords.shape[0]])
     for i, subregion in enumerate(subregion_list):
-        subr_histogram =  soft_assign_histogram(codewords, scan, subregion, 0.8)  
+        subr_histogram =  soft_assign_histogram(codewords, scan, subregion, roi, 0.8)  
         start_ind = i*codewords.shape[0]
         end_ind=i*codewords.shape[0]+codewords.shape[0]
         print(start_ind+1, "--", end_ind, "indices calculated")
@@ -262,7 +268,7 @@ def create_global_descriptor(scan, subregion_list, codewords):
     
     # print(global_descriptor)
     return global_descriptor.T
-
+'''
 dir1 = os.listdir("data/MRI_MASKS/subjects")
 dir2 = [(os.listdir("data/MRI_MASKS/segmentation_masks")[i]).split(".")[0] for i in range(len(os.listdir("data/MRI_MASKS/segmentation_masks")))]
 dir3 = [(os.listdir("data/MRI_MASKS/roi_masks_dataset")[i]).split(".")[0][4:] for i in range(len(os.listdir("data/MRI_MASKS/roi_masks_dataset")))]
@@ -273,9 +279,10 @@ all_global_descriptors = np.empty([len(list_of_subregions)*codewords.shape[0], l
 for i, subject in enumerate(common_subjects):
     path = "data/MRI_MASKS/subjects/" + subject
     scan_array = fn_scan_to_array(path)
-    global_descriptor = create_global_descriptor(scan_array, list_of_subregions,  codewords)
+    global_descriptor = create_global_descriptor(scan_array, list_of_subregions,  codewords, load_roi(subject))
     all_global_descriptors[:,i] = global_descriptor.reshape([len(list_of_subregions)*codewords.shape[0],])
     print("Done with ", subject)
 
 
 np.save("data/X_W_arrays/X_space.npy", all_global_descriptors)
+'''

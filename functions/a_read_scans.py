@@ -43,7 +43,7 @@ def fn_segm_mask_to_array(subject_name):
 
 
 # def calculate_roi():
-
+'''
 import os
 
 
@@ -89,6 +89,7 @@ for subject_name in files_only_in_directory:
     print('roi_mask ok - kernel radius: ', kr)
     np.save("data/MRI_MASKS/roi_masks_dataset/roi_"+ subject_name +".npy" , roi_mask)
     print('~~~ DONE WITH', subject_name, '~~~')
+    '''
 # roi_mask = np.load("data/MRI_MASKS/roi_masks_dataset/roi_9001104.npy")
 # subject_array = fn_scan_to_array("data/MRI_MASKS/subjects/9001104") # (384, 384, 160)
 # segm_mask = fn_segm_mask_to_array(subject_name)                        # (384, 384, 160)

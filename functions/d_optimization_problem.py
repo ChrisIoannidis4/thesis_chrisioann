@@ -87,7 +87,7 @@ def update_dictionaries(X, D, L, n, no_samples):
         except cp.error.SolverError:
             prob.solve(solver='SCS')
 
-        print(prob.status) #infeasible_inaccurate
+        print(prob.status) #infea/sible_inaccurate
         D[:,i] = Di.value.reshape(n,) #AttributeError: 'NoneType' object has no attribute 'reshape'
 
     return D
