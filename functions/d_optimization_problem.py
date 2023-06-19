@@ -53,8 +53,8 @@ def update_Lx(X, Dx, M, Lw):
     return Lx
 
 
-def update_Lw(W, Dw, M, Lx, gamma=0.7, alpha=0.01):
-
+def update_Lw(Lw_init, W, Dw, M, Lx, gamma=0.7, alpha=0.01):
+    Lw = Lw_init.copy()
     Y = np.vstack([W, gamma * M @ Lx])
     X = np.vstack([Dw, gamma * np.identity(25)])
     lasso = MultiTaskLasso(alpha=alpha)
@@ -69,6 +69,9 @@ def update_Lw(W, Dw, M, Lx, gamma=0.7, alpha=0.01):
 X = np.random.uniform(0,1, [128, 300])
 D = np.random.uniform(0,1, [128, 25])
 Lx = np.random.uniform(0,1, [25, 300])
+
+
+
 def update_dictionaries(X, D, L, n, no_samples):
     k = 25
     # (150x500) = (150x1)(1x500)
@@ -91,6 +94,20 @@ def update_dictionaries(X, D, L, n, no_samples):
         D[:,i] = Di.value.reshape(n,) #AttributeError: 'NoneType' object has no attribute 'reshape'
 
     return D
+
+import cvxopt
+
+
+
+
+
+
+
+
+
+
+
+
 
 Dx= update_dictionaries(X, D, Lx, 128, 300)
 print(Dx.shape, np.max(Dx), np.min(Dx), np.linalg.norm(Dx - D))
