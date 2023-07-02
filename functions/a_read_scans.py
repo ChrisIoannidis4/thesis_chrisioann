@@ -37,35 +37,35 @@ def fn_scan_to_array(base_path):
 
 def fn_segm_mask_to_array(subject_name):
 
-    mhd_path = "data/MRI_MASKS/segmentation_masks/"+ subject_name +".segmentation_masks.mhd"
+    mhd_path = "baseline/KL0/"+ subject_name +"/"+subject_name+".segmentation_masks.mhd"
     segm_mask = sitk.GetArrayFromImage(sitk.ReadImage(mhd_path, sitk.sitkFloat32))
     return np.flip(segm_mask, axis=0) # (384, 384, 160)
 
 
 # def calculate_roi():
-'''
+
 import os
 
 
 
 # Specify the paths to the directories
-directory1 = 'data/MRI_MASKS/segmentation_masks'
-directory2 = 'data/MRI_MASKS/roi_masks_dataset'
+# directory1 = 'data/MRI_MASKS/segmentation_masks'
+# directory2 = 'data/MRI_MASKS/roi_masks_dataset'
 
-# Get the list of files in each directory
-segm = set([os.listdir(directory1)[i].split('.')[0] for i in range(len(os.listdir(directory1)))])
-roi = set([os.listdir(directory2)[i].split('_')[1][:7]for i in range(len(os.listdir(directory2)))])
+# # Get the list of files in each directory
+# segm = set([os.listdir(directory1)[i].split('.')[0] for i in range(len(os.listdir(directory1)))])
+# roi = set([os.listdir(directory2)[i].split('_')[1][:7]for i in range(len(os.listdir(directory2)))])
 
-# Find the files in directory1 that are not in directory2
-files_only_in_directory = list(segm - roi)
-print('left exception join files loaded')
+# # Find the files in directory1 that are not in directory2
+# files_only_in_directory = list(segm - roi)
+# print('left exception join files loaded')
 # Print the filenames
 # for file in files_only_in_directory:
 #     print(file)
-
-for subject_name in files_only_in_directory:
+'''
+for subject_name in os.listdir("Baseline/KL4"):
     print('sj name: ', subject_name)
-    mhd_path = "data/MRI_MASKS/segmentation_masks/"+ subject_name +".segmentation_masks.mhd"
+    mhd_path = "Baseline/KL4/"+ subject_name + "/" + subject_name +".segmentation_masks.mhd"
     segm_mask = sitk.ReadImage(mhd_path, sitk.sitkFloat32)
     print('segm mask read')
     binary_mask = np.logical_or(segm_mask == 2, segm_mask == 4).astype(np.uint8)#.reshape(1,386,386,160)
@@ -87,17 +87,19 @@ for subject_name in files_only_in_directory:
     print('dilated mask ok', dilated_mask1.shape)
     roi_mask = np.flip(dilated_mask1, axis=0)  # (384, 384, 160)
     print('roi_mask ok - kernel radius: ', kr)
-    np.save("data/MRI_MASKS/roi_masks_dataset/roi_"+ subject_name +".npy" , roi_mask)
+    np.save("baseline_rois/roi_"+ subject_name +".npy" , roi_mask)
     print('~~~ DONE WITH', subject_name, '~~~')
-    '''
-# roi_mask = np.load("data/MRI_MASKS/roi_masks_dataset/roi_9001104.npy")
-# subject_array = fn_scan_to_array("data/MRI_MASKS/subjects/9001104") # (384, 384, 160)
-# segm_mask = fn_segm_mask_to_array(subject_name)                        # (384, 384, 160)
-# # print(np.unique(segm_mask))
-# plt.imshow(roi_mask[:, :, 50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
+ '''
+# roi_mask = np.load("baseline_rois/roi_9003430.npy")
+# # print(np.unique(roi_mask))
+# subject_array  = fn_scan_to_array("Baseline/KL0/9003430") # (384, 384, 160)
+# segm_mask = fn_segm_mask_to_array('9003430')                        # (384, 384, 160)
+# # # print(np.unique(segm_mask))
+
+# plt.imshow(subject_array[:, :, 50] * segm_mask[:, :, 50] *roi_mask[:, :, 50])
 # plt.colorbar()
 # plt.show()
-# plt.imshow(np.load('data/MRI_MASKS/roi_masks_dataset/roi_9001104.npy')[:,:,50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
+# plt.imshow(subject_array[:,:,50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
 # plt.colorbar()
 # plt.show()
 # plt.imshow(segm_mask[:, :, 50])#segm_mask[:, :, 50] * subject_array[:, :, 50])

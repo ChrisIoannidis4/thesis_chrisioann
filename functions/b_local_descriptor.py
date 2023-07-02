@@ -1,16 +1,16 @@
 import numpy as np
 import cv2
-from utils import getAverageMask, structure_tensor_3D, getGradients
-from trimesh.creation import icosphere
-from sklearn.utils.extmath import cartesian
-from sklearn.metrics.pairwise import linear_kernel
-from a_read_scans import fn_scan_to_array
-import math
-import itertools
-from sklearn.preprocessing import normalize
-from scipy.stats import kurtosis
-from scipy.special import sph_harm
-from scipy.ndimage.interpolation import map_coordinates
+# from utils import getAverageMask, structure_tensor_3D, getGradients
+# from trimesh.creation import icosphere
+# from sklearn.utils.extmath import cartesian
+# from sklearn.metrics.pairwise import linear_kernel
+# from a_read_scans import fn_scan_to_array
+# import math
+# import itertools
+# from sklearn.preprocessing import normalize
+# from scipy.stats import kurtosis
+# from scipy.special import sph_harm
+# from scipy.ndimage.interpolation import map_coordinates
 
 
 sift = cv2.xfeatures2d.SIFT_create()
@@ -46,7 +46,7 @@ def makeshiftSIFT(array3d, coordinates):
 # print('sift:', descriptor_sift.shape, np.max(descriptor_sift), np.min(descriptor_sift))
 
 
-
+"""
 def hog_3d_proj(point, image, psize = 5, rsize = 15, orientation = 'vertices', level = 1, mode = 'aggregate', 
                 rot_inv = False, norm = 'l2'):
     '''
@@ -183,6 +183,7 @@ from skimage.feature import hog
 
 def triplanar_hog(point, image, patch_size, n_bins, n_cells = 1, normalize = True):
     """
+"""
     Naive extension o Histogram of Oriented Gradients in 3D
     Calculating HOG descriptors for each plane intersecting the voxel (xy-, yz-, xz-)
     Final descriptor as a result of concatenation of planar descriptors.
@@ -210,7 +211,7 @@ def triplanar_hog(point, image, patch_size, n_bins, n_cells = 1, normalize = Tru
         voxel HOG descriptor
 
     """
-
+"""
     x, y, z = point
 
     img_xy = image[:, :, z]
@@ -380,3 +381,4 @@ hog: (42,) 0.4880337225352944 0.0
 lbp: (20,) 0.4356171635286237 0.05110432136505119
 hog lbp: (1, 62) 0.4880337225352944 0.0
 '''
+"""

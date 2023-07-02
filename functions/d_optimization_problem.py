@@ -95,15 +95,6 @@ def update_dictionaries(X, D, L, n, no_samples):
 
     return D
 
-import cvxopt
-
-
-
-
-
-
-
-
 
 
 
@@ -112,8 +103,10 @@ import cvxopt
 Dx= update_dictionaries(X, D, Lx, 128, 300)
 print(Dx.shape, np.max(Dx), np.min(Dx), np.linalg.norm(Dx - D))
 
-def optimization_loop(X, Dx, Lx, W, Dw, Lw ):
-    M = update_M(Lx, Lw)
+norm_of_gradients = []
+M = update_M(Lx, Lw)
+def optimization_loop(X, Dx, Lx, W, Dw, Lw , M, gamma = 0.7):
+
     print("Initialized M", M.shape, np.max(M), np.min(M))
     Lx_new = update_Lx(X, Dx, M, Lw)
     print("Updated Lx", Lx_new.shape, np.max(Lx_new), np.min(Lx_new))
@@ -130,7 +123,9 @@ def optimization_loop(X, Dx, Lx, W, Dw, Lw ):
     print("dLx: ", np.linalg.norm(Lx_new-Lx))
     print("dLw: ", np.linalg.norm(Lw_new-Lw))
     print("dM: ", np.linalg.norm(M_new-M))
-
+    obj_fun = np.linalg.norm(X - Dx_new @ Lx_new,"fro") + np.linalg.norm(W - Dw_new @ Lw_new,"fro") + gamma * np.linalg.norm(Lw_new - Dw_new @ Lw_new,"fro") \
+                + 0.75 * np.linalg.norm(Lx_new,"fro") + 0.75 * np.linalg.norm(Lw_new, ord=1) + 0.75 * np.linalg.norm(Lw_new, "fro")
+    norm_of_gradients.append(obj_fun)
 
 # W = np.load("data/X_W_arrays/W_space.npy")
 # X = np.load("data/X_W_arrays/X_space.npy")

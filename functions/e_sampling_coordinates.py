@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 import random 
 
 def load_roi(subj_no):
-    roi = np.load("data/MRI_MASKS/roi_masks_dataset/roi_"+ subj_no + ".npy")
+    roi = np.load("baseline_rois/roi_"+ subj_no + ".npy")
     return roi 
 
 
@@ -121,7 +121,7 @@ min_y = 1000
 max_y = 0
 min_z = 1000
 max_z = 0
-for roi_path in get_lists_of_of_paths("data/MRI_MASKS/roi_masks_dataset"):
+for roi_path in get_lists_of_of_paths("baseline_rois"):
     print("path", roi_path)
     roi = np.load(roi_path)
     print("roi",roi.shape)
@@ -163,23 +163,132 @@ print("roi_maxy", roi_maxy)
 print("roi_maxz", roi_maxz)
 '''
 
-# roi_minx 117
+# roi_minx 113
 # roi_miny 87
 # roi_minz 0
-# roi_maxx 240
-# roi_maxy 275
+# roi_maxx 277
+# roi_maxy 297
 # roi_maxz 159
 
-roi_cube = []
 
-for x in range(117, 240):
-    for y in range(87, 275):
-        for z in range(0,160):
-            roi_cube.append([x,y,z])
 
-# np.save("data/temp/roi_cube.npy", roi_cube)
 
-roi_cube = np.array(roi_cube)
+# np.save('coordinates/coordinate_cube.npy',coordinate_cube)
+# print('got cube')
+
+# roi_subset = []
+# image_coordinates= []
+
+# roi = np.load('baseline_rois/roi_9005075.npy')
+
+
+# for coordinate in roi_cube:
+#     x,y,z=coordinate
+#     if x%2==0 and y%2==0 and z%2==0:
+#         roi_subset.append(coordinate)
+#         if roi[x,y,z]==1:
+#             image_coordinates.append(coordinate)
+        
+# print(len(roi_subset)) 
+# print(len(image_coordinates))      
+        
+# random.shuffle(roi_subset)
+# np.save('coordinates/dummy_553.npy',roi_subset) 
+# random.shuffle(image_coordinates)
+# np.save('coordinates/coordinates_9003430.npy',image_coordinates) 
+# print('saved sets of coordinates')
+
+
+coordinate_cube = np.load('coordinates/coordinate_cube.npy')
+
+# np.random.shuffle(coordinate_cube)
+# np.save('coordinates/coordinate_cube.npy',coordinate_cube)
+# segm_mask = fn_segm_mask_to_array('9005075')   
+
+# roi = np.load('baseline_rois/roi_9005075.npy')
+# Y = []
+# for coordinate in coordinate_cube:
+#     x,y,z = coordinate
+#     if x%4==0 and y%4==0 and z%4==0 and roi[x,y,z]==1:
+#         Y.append(segm_mask[x,y,z])
+# Y=np.array(Y)
+# unique_values, counts = np.unique(Y, return_counts=True)
+
+# for value, count in zip(unique_values, counts):
+#     print(f"{value}: {count}")    
+
+
+
+
+def svm_coordinate_sampling(segm, roi):
+    coord_labels = []
+    coordinates = []
+    
+    mask_values = segm[coordinate_cube[:,0], coordinate_cube[:,1], coordinate_cube[:,2]]
+
+    threshold_4 = np.count_nonzero(mask_values == 4) #.shape[0]#len(segm[segm[coordinate_cube]==4])
+    
+    threshold_1=int(threshold_4/1.6)
+    threshold_2=int(threshold_4*1.5)
+    threshold_3=int(threshold_4/1.6)
+    threshold_0=int(threshold_4/2)
+   
+    i_0,i_1,i_2,i_3,i_4 =0, 0, 0, 0, 0
+    
+    print(threshold_0,threshold_1,threshold_2,threshold_3,threshold_4)
+        
+        
+    for coordinate in coordinate_cube:
+        x,y,z = coordinate
+        if roi[x,y,z]==1:
+            if segm[x,y,z]==0 and i_0<threshold_0:
+                coordinates.append(coordinate)
+                i_0+=1
+                coord_labels.append(0)
+            elif segm[x,y,z]==1 and i_1<threshold_1:
+                coordinates.append(coordinate)
+                i_1+=1
+                coord_labels.append(1)
+            elif segm[x,y,z]==2 and i_2<threshold_2:
+                coordinates.append(coordinate)
+                i_2+=1
+                coord_labels.append(2)
+            elif segm[x,y,z]==3 and i_3<threshold_3:
+                coordinates.append(coordinate)
+                i_3+=1
+                coord_labels.append(3)
+            elif segm[x,y,z]==4 and i_4<threshold_4:
+                coordinates.append(coordinate)
+                i_4+=1 
+                coord_labels.append(4)
+                
+    coord_labels=np.array(coord_labels)
+    unique_values, counts = np.unique(coord_labels, return_counts=True)
+
+    for value, count in zip(unique_values, counts):
+        print(f"{value}: {count}")              
+    return coordinates
+
+
+
+
+
+# coordinates = svm_coordinate_sampling(segm_mask, roi)
+# Y = []
+# for coordinate in coordinate_cube:
+#     x,y,z = coordinate
+#     if x%4==0 and y%4==0 and z%4==0 and roi[x,y,z]==1:
+#         Y.append(segm_mask[x,y,z])
+# Y=np.array(Y)
+# unique_values, counts = np.unique(Y, return_counts=True)
+
+# for value, count in zip(unique_values, counts):
+#     print(f"{value}: {count}")  
+        
+        
+# np.save("coordinates/roi_cube.npy", roi_cube)
+"""
+roi_cube = np.array(roi_cube) # np.load("coordinates/roi_cube.npy")
 random.shuffle(roi_cube)
 random_state=1
 kmeans_model1=KMeans(n_clusters=120, verbose=False, init='k-means++', random_state=random_state)
@@ -207,8 +316,14 @@ subregion_5 = roi_subset[final_label==4]
 
 print("     created 5 subregions:", subregion_1.shape, " -- ", subregion_2.shape, " -- ",subregion_3.shape,\
        " -- ",subregion_4.shape, " -- ",subregion_5.shape)
-np.save("data/temp/sub_1_coord.npy", subregion_1)
-np.save("data/temp/sub_2_coord.npy", subregion_2)
-np.save("data/temp/sub_3_coord.npy", subregion_3)
-np.save("data/temp/sub_4_coord.npy", subregion_4)
-np.save("data/temp/sub_5_coord.npy", subregion_5)
+np.save("coordinates/sub_1_coord.npy", subregion_1)
+np.save("coordinates/sub_2_coord.npy", subregion_2)
+np.save("coordinates/sub_3_coord.npy", subregion_3)
+np.save("coordinates/sub_4_coord.npy", subregion_4)
+np.save("coordinates/sub_5_coord.npy", subregion_5)
+"""
+
+
+# for coord in roi_subset:
+#     x,y,z = coord 
+#     if roi
