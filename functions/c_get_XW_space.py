@@ -8,7 +8,7 @@ from numpy.linalg import norm
 import cv2
 import os
 from e_sampling_coordinates import load_roi, svm_coordinate_sampling
-from b_local_descriptor import makeshiftSIFT#, lbp_ri_sh, hog_3d_proj, fn_hog_lbp_descriptor, triplanar_hog
+from b_local_descriptor import makeshiftSIFT, fn_hog_lbp_descriptor, hog_3d_proj  #, lbp_ri_sh, hog_3d_proj, fn_hog_lbp_descriptor, triplanar_hog
 
 sift = cv2.xfeatures2d.SIFT_create()
 # subject_array = fn_scan_to_array("data/MRI_MASKS/subjects/9001104") # (384, 384, 160)
@@ -26,19 +26,19 @@ sift = cv2.xfeatures2d.SIFT_create()
 # sample_SVM_coordinates(roi_mask, segm_mask)
 # coordinates= np.load("data/temp/sampled_coordinates.npy")
 
-def gather_local_descriptors(scan_array, list_of_coordinates, roi):
+def gather_local_descriptors(scan_array, list_of_coordinates):
     list_of_descriptors=[]
-    specific_coordinates = []
+    list_of_valid_coordinates = []
+    
     for coordinate in list_of_coordinates:
-        x,y,z = coordinate
-        if roi[x,y,z] == 1:
-            local_descriptor =  makeshiftSIFT(scan_array, coordinate) #fn_hog_lbp_descriptor(coordinate, scan_array)
+        # print(coordinate)
+        local_descriptor = fn_hog_lbp_descriptor(coordinate, scan_array) #makeshiftSIFT(scan_array, coordinate) # 
+        if not np.isnan(local_descriptor).any():
             list_of_descriptors.append(local_descriptor)
-            specific_coordinates.append(coordinate)
-        
+            list_of_valid_coordinates.append(coordinate)
     local_descriptors_dataset = np.array(list_of_descriptors).reshape(len(list_of_descriptors), local_descriptor.shape[1])
     # print("gathered local descriptors dataset.
-    return local_descriptors_dataset , specific_coordinates
+    return local_descriptors_dataset, np.array(list_of_valid_coordinates)
  
 
 
@@ -72,10 +72,8 @@ def svm_predict(local_descriptor, weights, bias):
 
 
 def svm_test(dataset, segm_mask, coordinates):
-    random.shuffle(coordinates)
-
     k = coordinates.shape[0]
-    l= k//3
+    l= k//6
     X = dataset[:-l]
     # print(X.shape)
     Y = []
@@ -115,11 +113,19 @@ def svm_test(dataset, segm_mask, coordinates):
             wrong+=1
 
         
-
     print("acc:", str(100*corr/(wrong+corr)), "%")
-    # print(W.shape)
-    # print("Created W array")
+    
     return W, b
+
+scan = fn_scan_to_array('Baseline/KL0/9003430')
+segm_mask = fn_segm_mask_to_array('9003430')   
+roi = np.load('baseline_rois/roi_9003430.npy')
+
+coordinates = svm_coordinate_sampling(segm_mask, roi)
+local_descriptors_dataset, valid_coordinates = gather_local_descriptors(scan, coordinates)
+
+W, b = svm_test(local_descriptors_dataset, segm_mask, valid_coordinates)
+
 '''
 roi_subset=[]
 scan_array = fn_scan_to_array('Baseline/KL0/9003430')
@@ -274,11 +280,11 @@ def soft_assign_histogram(codewords, array_3d, coordinates, roi, a):
 
 # codewords=np.load("data/temp/codewords.npy")
 
-list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
-                      np.load("data/temp/sub_2_coord.npy"),
-                      np.load("data/temp/sub_3_coord.npy"),
-                      np.load("data/temp/sub_4_coord.npy"),
-                      np.load("data/temp/sub_5_coord.npy")]
+# list_of_subregions = [np.load("data/temp/sub_1_coord.npy"),
+#                       np.load("data/temp/sub_2_coord.npy"),
+#                       np.load("data/temp/sub_3_coord.npy"),
+#                       np.load("data/temp/sub_4_coord.npy"),
+#                       np.load("data/temp/sub_5_coord.npy")]`
 
 def create_global_descriptor(scan, subregion_list, codewords, roi):
     global_descriptor=np.empty([1,len(subregion_list)*codewords.shape[0]])

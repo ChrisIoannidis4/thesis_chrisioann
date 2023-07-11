@@ -1,16 +1,17 @@
 import numpy as np
 import cv2
-# from utils import getAverageMask, structure_tensor_3D, getGradients
-# from trimesh.creation import icosphere
-# from sklearn.utils.extmath import cartesian
-# from sklearn.metrics.pairwise import linear_kernel
-# from a_read_scans import fn_scan_to_array
-# import math
-# import itertools
-# from sklearn.preprocessing import normalize
-# from scipy.stats import kurtosis
-# from scipy.special import sph_harm
-# from scipy.ndimage.interpolation import map_coordinates
+from utils import getAverageMask, structure_tensor_3D, getGradients
+from trimesh.creation import icosphere
+from sklearn.utils.extmath import cartesian
+from sklearn.metrics.pairwise import linear_kernel
+from a_read_scans import fn_scan_to_array
+import math
+import itertools
+from sklearn.preprocessing import normalize
+from scipy.stats import kurtosis
+from scipy.special import sph_harm
+from scipy.ndimage.interpolation import map_coordinates
+
 
 
 sift = cv2.xfeatures2d.SIFT_create()
@@ -46,7 +47,7 @@ def makeshiftSIFT(array3d, coordinates):
 # print('sift:', descriptor_sift.shape, np.max(descriptor_sift), np.min(descriptor_sift))
 
 
-"""
+
 def hog_3d_proj(point, image, psize = 5, rsize = 15, orientation = 'vertices', level = 1, mode = 'aggregate', 
                 rot_inv = False, norm = 'l2'):
     '''
@@ -183,7 +184,7 @@ from skimage.feature import hog
 
 def triplanar_hog(point, image, patch_size, n_bins, n_cells = 1, normalize = True):
     """
-"""
+
     Naive extension o Histogram of Oriented Gradients in 3D
     Calculating HOG descriptors for each plane intersecting the voxel (xy-, yz-, xz-)
     Final descriptor as a result of concatenation of planar descriptors.
@@ -211,7 +212,6 @@ def triplanar_hog(point, image, patch_size, n_bins, n_cells = 1, normalize = Tru
         voxel HOG descriptor
 
     """
-"""
     x, y, z = point
 
     img_xy = image[:, :, z]
@@ -355,7 +355,7 @@ def lbp_ri_sh(point, img, patch_size, sph_degree, ico_radius, ico_level, n_bins 
 
     return D
 
-
+coordinate = np.array([200, 160, 50])
 # descriptor_lbp = lbp_ri_sh(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'), 5, 5, 3, 2, concatenate = False)
 
 # print('lbp:', descriptor_lbp.shape, np.max(descriptor_lbp), np.min(descriptor_lbp))
@@ -363,14 +363,14 @@ def lbp_ri_sh(point, img, patch_size, sph_degree, ico_radius, ico_level, n_bins 
 
 
 def fn_hog_lbp_descriptor(coordinate, array):  
-    descriptor_lbp = lbp_ri_sh(coordinate, array, 5, 5, 3, 2, concatenate = False)
+    descriptor_lbp = lbp_ri_sh(coordinate, array, 5, 3, 2, 2, concatenate = True)
     descriptor_hog = hog_3d_proj(coordinate, array) 
     descriptor_lbp_hog = np.concatenate([descriptor_hog,descriptor_lbp])
     return descriptor_lbp_hog.reshape(1, len(descriptor_lbp_hog))
 
-# descriptor_hog_lbp = fn_hog_lbp_descriptor(coordinate, fn_scan_to_array('data/MRI_MASKS/subjects/9005132'))
+descriptor_hog_lbp = fn_hog_lbp_descriptor(coordinate, fn_scan_to_array('Baseline/KL0/9003430'))
 
-# print('hog lbp:', descriptor_hog_lbp.shape, np.max(descriptor_hog_lbp), np.min(descriptor_hog_lbp))
+print('hog lbp:', descriptor_hog_lbp.shape, np.max(descriptor_hog_lbp), np.min(descriptor_hog_lbp))
 
 # descriptor = makeshiftSIFT(fn_scan_to_array('data/MRI_MASKS/subjects/9005132'), coordinate)
 # print(descriptor.shape)
@@ -381,4 +381,48 @@ hog: (42,) 0.4880337225352944 0.0
 lbp: (20,) 0.4356171635286237 0.05110432136505119
 hog lbp: (1, 62) 0.4880337225352944 0.0
 '''
-"""
+
+
+
+
+
+
+
+def calculate_sift_descriptor(voxel_data, voxel_coordinate, voxel_size=3, neighborhood_size=5, num_bins=8):
+    # Step 1: Define Voxel Neighborhood
+    half_neighborhood = neighborhood_size // 2
+    
+    # Extract voxel coordinates
+    x, y, z = voxel_coordinate
+    
+    # Step 2: Gradient Calculation
+    gradient_x = np.gradient(voxel_data, axis=0)
+    gradient_y = np.gradient(voxel_data, axis=1)
+    gradient_z = np.gradient(voxel_data, axis=2)
+    
+    # Step 3: Orientation Assignment
+    magnitudes = np.sqrt(gradient_x**2 + gradient_y**2 + gradient_z**2)
+    orientations = np.arctan2(gradient_y, gradient_x)
+    
+    # Step 4: Descriptor Calculation
+    descriptor = np.zeros(num_bins)
+    
+    for i in range(-half_neighborhood, half_neighborhood + 1):
+        for j in range(-half_neighborhood, half_neighborhood + 1):
+            for k in range(-half_neighborhood, half_neighborhood + 1):
+                # Calculate the bin index based on the orientation
+                bin_index = int((orientations[x+i, y+j, z+k] + np.pi) * num_bins / (2 * np.pi))
+                
+                # Accumulate the gradient magnitude in the corresponding bin
+                descriptor[bin_index] += magnitudes[x+i, y+j, z+k]
+    
+    # Step 5: Descriptor Normalization
+    descriptor /= np.linalg.norm(descriptor)
+    
+    return descriptor
+
+
+descriptor = calculate_sift_descriptor(fn_scan_to_array('Baseline/KL0/9003430'), coordinate)
+
+print("SIFT Descriptor:")
+print(descriptor, descriptor.shape, np.max(descriptor), np.min(descriptor))

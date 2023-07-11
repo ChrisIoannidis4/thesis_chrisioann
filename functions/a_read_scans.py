@@ -32,8 +32,9 @@ def fn_scan_to_array(base_path):
             scan_array3D=np.dstack((scan_array3D, slice_array))
     return scan_array3D  # (384, 384, 160)
 
+mri_scan = fn_scan_to_array('Baseline/KL4/9005132')
 
-# subject_numbers = os.listdir("data/MRI_MASKS/subjects")
+
 
 def fn_segm_mask_to_array(subject_name):
 
@@ -96,7 +97,7 @@ for subject_name in os.listdir("Baseline/KL4"):
 # segm_mask = fn_segm_mask_to_array('9003430')                        # (384, 384, 160)
 # # # print(np.unique(segm_mask))
 
-# plt.imshow(subject_array[:, :, 50] * segm_mask[:, :, 50] *roi_mask[:, :, 50])
+# plt.imshow(subject_array[:, :, 50]  *roi_mask[:, :, 50])
 # plt.colorbar()
 # plt.show()
 # plt.imshow(subject_array[:,:,50])#segm_mask[:, :, 50] * subject_array[:, :, 50])
