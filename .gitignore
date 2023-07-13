@@ -1,5 +1,10 @@
 data
 Baseline
 baseline_rois
-coordinates
+coordinates/roi_cube.npy
+coordinates/sub_1_coord.npy
+coordinates/sub_2_coord.npy
+coordinates/sub_3_coord.npy
+coordinates/sub_4_coord.npy
+coordinates/sub_5_coord.npy
 global_descriptors
